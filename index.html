@@ -199,6 +199,32 @@ ul.bul>li b, .hl{color:var(--red-deep); font-weight:700}
 }
 .tl-item.big .tl-dot{width:44px;height:44px;border-color:var(--gold);background:var(--red);margin-top:-7px}
 .tl-year{font-family:var(--font-head); font-size:38px; font-weight:700; color:var(--red-deep); margin-bottom:8px}
+/* --- timeline chạy dần: đường kẻ vẽ từ trái sang, mốc bật theo thứ tự --- */
+.timeline::before{transform:scaleX(0); transform-origin:left center}
+.slide.active .timeline::before{transition:transform 1.5s cubic-bezier(.25,.8,.3,1) .35s; transform:scaleX(1)}
+.tl-item{opacity:0; transform:translateY(14px);
+  transition:opacity .5s ease, transform .5s cubic-bezier(.22,.8,.3,1)}
+.slide.active .tl-item{opacity:1; transform:none}
+.slide.active .tl-item:nth-child(1){transition-delay:.45s}
+.slide.active .tl-item:nth-child(2){transition-delay:.75s}
+.slide.active .tl-item:nth-child(3){transition-delay:1.05s}
+.slide.active .tl-item:nth-child(4){transition-delay:1.35s}
+.slide.active .tl-item:nth-child(5){transition-delay:1.65s}
+.slide.active .tl-item.big .tl-dot{animation:tlping 1.1s cubic-bezier(.22,.7,.3,1) 1.6s 1 both}
+@keyframes tlping{
+  0%{box-shadow:0 0 0 8px var(--bg), 0 0 0 8px rgba(249,168,37,.55)}
+  60%{box-shadow:0 0 0 8px var(--bg), 0 0 0 34px rgba(249,168,37,0)}
+  100%{box-shadow:0 0 0 8px var(--bg), 0 0 0 34px rgba(249,168,37,0)}
+}
+/* mốc 2020 là mục tiêu đặt ra, chưa phải việc đã xảy ra -> để nhạt và nét đứt */
+.tl-item.goal .tl-dot{background:var(--bg); border-style:dashed; border-color:#C0B7A6}
+.tl-item.goal .tl-year{color:var(--muted)}
+.tl-item.goal .tl-txt{color:#9A9084}
+@media (prefers-reduced-motion:reduce){
+  .timeline::before{transform:none}
+  .tl-item{opacity:1; transform:none; transition:none}
+  .slide.active .tl-item.big .tl-dot{animation:none}
+}
 .tl-item.big .tl-year{font-size:46px}
 .tl-txt{font-size:24px; line-height:1.4; color:var(--muted)}
 
@@ -274,6 +300,53 @@ h1.big em{font-style:italic; color:var(--red)}
   border:1px solid rgba(0,0,0,.08); border-radius:100px; padding:6px 14px;
   font-variant-numeric:tabular-nums; backdrop-filter:blur(6px); transition:bottom .25s ease;
 }
+/* ============================================================
+   THANH NHẢY SLIDE (phím T)
+   ============================================================ */
+#jump{
+  position:fixed; left:50%; bottom:calc(var(--notesH) + 22px); z-index:60;
+  box-sizing:border-box; width:1148px;
+  transform:translate(-50%, 24px); opacity:0; pointer-events:none;
+  display:flex; align-items:center; gap:16px;
+  padding:14px 22px; border-radius:100px;
+  background:rgba(255,253,246,.96); border:1px solid rgba(26,30,34,.12);
+  box-shadow:0 14px 40px rgba(26,30,34,.18);
+  backdrop-filter:blur(10px);
+  transition:opacity .28s ease, transform .28s cubic-bezier(.22,.8,.3,1), bottom .25s ease;
+  font-family:var(--font-body);
+}
+#jump.on{opacity:1; transform:translate(-50%,0); pointer-events:auto}
+body.jump-on #hint{opacity:0 !important; pointer-events:none}   /* tránh đè lên dòng gợi ý phím */
+#jump-range{
+  -webkit-appearance:none; appearance:none; width:560px; flex:none; height:6px; border-radius:4px;
+  background:linear-gradient(90deg,var(--gold),var(--red)); cursor:pointer; outline:none;
+}
+#jump-range::-webkit-slider-thumb{
+  -webkit-appearance:none; width:22px; height:22px; border-radius:50%;
+  background:#fff; border:5px solid var(--red); cursor:grab;
+  box-shadow:0 2px 8px rgba(26,30,34,.25);
+}
+#jump-range::-moz-range-thumb{
+  width:22px; height:22px; border-radius:50%; border:5px solid var(--red);
+  background:#fff; cursor:grab; box-shadow:0 2px 8px rgba(26,30,34,.25);
+}
+#jump-num{
+  width:92px; flex:none; box-sizing:border-box; padding:8px 10px; text-align:center;
+  border:1px solid rgba(26,30,34,.16); border-radius:10px; background:#fff;
+  font-family:var(--font-head); font-size:22px; font-weight:700; color:var(--red-deep);
+}
+#jump-num:focus{outline:2px solid var(--red); outline-offset:1px}
+#jump-tot{font-size:19px; color:var(--muted); font-weight:600; white-space:nowrap;
+  width:56px; flex:none}
+/* width cố định: tên slide dài ngắn khác nhau, nếu để co giãn thì cả thanh
+   đổi bề ngang và nhảy qua lại khi đang kéo */
+#jump-name{
+  width:360px; flex:none; font-size:17px; color:var(--muted);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  border-left:1px solid rgba(26,30,34,.12); padding-left:16px;
+}
+@media (prefers-reduced-motion:reduce){ #jump{transition:opacity .2s ease} }
+
 #hint{
   position:fixed; left:18px; bottom:calc(var(--notesH) + 14px); z-index:40;
   font-size:13px; color:#6A6058; background:rgba(255,255,255,.82);
@@ -568,6 +641,94 @@ aside.notes-src{display:none}
 .v{width:100%; height:auto; max-height:100%; display:block; overflow:visible}
 .v text{font-family:var(--font-body); font-size:26px; fill:var(--muted); text-anchor:middle}
 
+/* --- sáu thẻ quan điểm: bấm được + đánh dấu đã xem --- */
+.qcard{
+  font:inherit; text-align:left; color:inherit; cursor:pointer;
+  transition:transform .25s cubic-bezier(.22,.8,.3,1), box-shadow .25s ease, border-color .25s ease;
+}
+.qcard:hover{transform:translateY(-6px); border-color:rgba(183,28,28,.35);
+  box-shadow:0 14px 34px rgba(26,30,34,.13)}
+.qcard:focus-visible{outline:3px solid var(--red); outline-offset:3px}
+.qcard-seen{
+  position:absolute; right:18px; bottom:18px; width:30px; height:30px; border-radius:50%;
+  background:var(--red); color:#fff; display:grid; place-items:center;
+  opacity:0; transform:scale(.5);
+  transition:opacity .3s ease, transform .35s cubic-bezier(.22,.9,.3,1);
+}
+.qcard-seen svg{width:17px; height:17px; fill:none; stroke:currentColor;
+  stroke-width:3; stroke-linecap:round; stroke-linejoin:round}
+.qcard.seen{border-color:rgba(183,28,28,.3); background:linear-gradient(180deg,#fff,rgba(183,28,28,.035))}
+.qcard.seen .qcard-seen{opacity:1; transform:scale(1)}
+.qcard.seen h4{color:var(--red)}
+
+/* --- nút quay lại trang tổng quan, góc trái dưới slide quan điểm --- */
+.qd-back{
+  position:absolute; left:108px; bottom:38px; z-index:60;
+  display:flex; align-items:center; gap:9px; padding:9px 20px 9px 14px;
+  border:1px solid rgba(26,30,34,.14); border-radius:100px; cursor:pointer;
+  background:rgba(255,255,255,.82); backdrop-filter:blur(6px);
+  font-family:var(--font-body); font-size:19px; font-weight:600; color:var(--muted);
+  opacity:.72; transition:opacity .25s ease, color .25s ease, border-color .25s ease, transform .25s ease;
+}
+.qd-back svg{width:18px; height:18px; fill:none; stroke:currentColor;
+  stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round}
+.qd-back:hover{opacity:1; color:var(--red); border-color:rgba(183,28,28,.4); transform:translateX(-3px)}
+.qd-back:focus-visible{outline:3px solid var(--red); outline-offset:3px; opacity:1}
+
+/* ============================================================
+   SLIDE HẠN CHẾ — chặng đường tới mốc 2020 + bốn thẻ
+   ============================================================ */
+.lim-road{margin-bottom:26px}
+.lim-svg{display:block; width:100%; height:auto; overflow:visible}
+.lim-svg text{font-family:var(--font-body); font-size:21px; font-weight:700;
+  fill:var(--ink-2); text-anchor:middle}
+.lim-base{stroke:rgba(26,30,34,.10); stroke-width:10; stroke-linecap:round}
+.lim-done{stroke:var(--red); stroke-width:10; stroke-linecap:round;
+  stroke-dasharray:1045; stroke-dashoffset:1045}
+.lim-gap{stroke:#C0B7A6; stroke-width:6; stroke-linecap:round; stroke-dasharray:3 16; opacity:0}
+.lim-start circle{fill:var(--red); opacity:0}
+.lim-start text{fill:var(--red-deep); font-size:26px}
+.lim-start .lim-cap{font-size:19px; font-weight:500; fill:var(--muted)}
+.lim-now circle{fill:#fff; stroke:var(--red); stroke-width:6; opacity:0;
+  transform-box:fill-box; transform-origin:center}
+.lim-now text{font-size:19px; font-weight:600; fill:var(--muted)}
+.lim-goal circle{fill:#fff; stroke:#C0B7A6; stroke-width:5}
+.lim-goal text{font-size:26px; fill:var(--muted)}
+.lim-flag{fill:none; stroke:#C0B7A6; stroke-width:5; stroke-linejoin:round}
+.lim-goal{opacity:.55}
+.lim-gaplbl{font-size:19px !important; font-weight:600 !important; fill:#8A5A00 !important; opacity:0}
+.slide.active .lim-done{animation:limrun 1.25s cubic-bezier(.25,.8,.3,1) .45s forwards}
+.slide.active .lim-start circle{animation:vfade .4s ease .35s forwards}
+.slide.active .lim-now circle{animation:vpop .45s cubic-bezier(.22,.9,.3,1) 1.6s forwards}
+.slide.active .lim-gap{animation:vfade .5s ease 1.8s forwards}
+.slide.active .lim-gaplbl{animation:vfade .5s ease 2s forwards}
+@keyframes limrun{to{stroke-dashoffset:0}}
+.lim-lead{
+  margin:14px 0 0; padding:16px 24px; border-left:7px solid var(--red); border-radius:0 12px 12px 0;
+  background:rgba(183,28,28,.055); font-size:29px; line-height:1.42; color:var(--ink-2);
+}
+.lim-lead b{color:var(--red-deep)}
+.lim-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px 22px; margin-bottom:24px}
+.lim-card{
+  display:flex; align-items:flex-start; gap:18px;
+  padding:20px 24px; border-radius:14px;
+  background:#fff; border:1px solid rgba(26,30,34,.09);
+  box-shadow:0 4px 14px rgba(26,30,34,.045);
+}
+.lim-ico{
+  width:52px; height:52px; flex:none; border-radius:12px; display:grid; place-items:center;
+  background:var(--gold-soft); color:#8A5A00;
+}
+.lim-ico svg{width:28px; height:28px; fill:none; stroke:currentColor;
+  stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.lim-txt{font-size:25px; line-height:1.44; color:var(--ink-2)}
+.lim-txt b{color:var(--red-deep)}
+@media (prefers-reduced-motion:reduce){
+  .slide.active .lim-done{animation:none; stroke-dashoffset:0}
+  .slide.active .lim-start circle,.slide.active .lim-now circle,
+  .slide.active .lim-gap,.slide.active .lim-gaplbl{animation:none; opacity:1}
+}
+
 /* --- chuyển cảnh lưới --- */
 .slide.gt{transition:none !important; opacity:1 !important; visibility:visible !important;
   transform:none !important}
@@ -790,6 +951,19 @@ aside.notes-src{display:none}
 .dv-rule{
   position:relative; z-index:1; width:200px; height:7px; border-radius:4px;
   background:linear-gradient(90deg, var(--gold), var(--red));
+}
+/* --- sang chương: số La Mã trượt vào, gạch dưới vẽ ngang --- */
+.dv-ghost{opacity:0; transition:opacity .9s ease, transform .9s cubic-bezier(.22,.8,.3,1)}
+.slide.divider .dv-ghost{transform:translate(-50%,-54%) translateX(-90px)}
+.slide.divider.active .dv-ghost{opacity:1; transform:translate(-50%,-54%) translateX(0);
+  transition-delay:.15s}
+.dv-rule{transform:scaleX(0); transform-origin:left center}
+.slide.divider.active .dv-rule{
+  transition:transform .75s cubic-bezier(.22,.8,.3,1) .55s; transform:scaleX(1)}
+@media (prefers-reduced-motion:reduce){
+  .slide.divider .dv-ghost{transform:translate(-50%,-54%)}
+  .dv-ghost{opacity:1; transition:none}
+  .dv-rule{transform:none; transition:none}
 }
 
 /* ============================================================
@@ -1544,7 +1718,73 @@ aside.notes-src{display:none}
   background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.28);
   font:inherit; font-size:19px; font-weight:700}
 
- (prefers-reduced-motion:reduce){
+/* ============================================================
+   NÚT TẮT TIẾNG (chỉ trong quiz)
+   ============================================================ */
+.qz-mute{
+  width:46px; height:46px; flex:none; padding:0; cursor:pointer;
+  border-radius:50%; border:1px solid rgba(255,255,255,.26);
+  background:rgba(255,255,255,.10); color:#fff;
+  display:grid; place-items:center;
+  transition:background .25s ease, border-color .25s ease, transform .2s ease;
+}
+.qz-mute:hover{background:rgba(255,255,255,.2); transform:scale(1.08)}
+.qz-mute svg{width:24px; height:24px; fill:none; stroke:currentColor;
+  stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round}
+.qz-mute .qz-mute-x{opacity:0}
+.qz-mute.off{color:var(--qz-no); border-color:rgba(255,154,154,.45)}
+.qz-mute.off .qz-mute-w{opacity:0}
+.qz-mute.off .qz-mute-x{opacity:1}
+.qz-top-r{display:flex; align-items:center; gap:22px}
+
+/* ============================================================
+   SLIDE KẾT QUẢ QUIZ
+   ============================================================ */
+.qz-res-in{position:absolute; inset:0; z-index:10;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px}
+.qz-res-kicker{font-size:23px; font-weight:800; letter-spacing:.34em; text-transform:uppercase;
+  color:var(--qz-gold); opacity:0}
+.qz-res-title{margin:8px 0 2px; font-family:var(--font-head); font-size:88px; line-height:1.05;
+  font-weight:700; color:#fff; letter-spacing:-.02em; text-shadow:0 6px 30px rgba(0,0,0,.35); opacity:0}
+.qz-ring{position:relative; width:280px; height:280px; margin:14px 0 6px; opacity:0}
+.qz-ring svg{width:100%; height:100%; transform:rotate(-90deg)}
+.qz-ring circle{fill:none; stroke-width:16; stroke-linecap:round}
+.qz-ring .qz-ring-bg{stroke:rgba(255,255,255,.16)}
+.qz-ring .qz-ring-fg{stroke:var(--qz-gold); stroke-dasharray:766; stroke-dashoffset:766;
+  transition:stroke-dashoffset 1.3s cubic-bezier(.22,.8,.3,1)}
+.qz-ring-num{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-head); font-weight:700; color:#fff; letter-spacing:-.02em}
+.qz-ring-num b{font-size:96px; line-height:1; font-weight:700}
+.qz-ring-num i{font-style:normal; font-size:40px; color:rgba(255,248,238,.6); margin-left:4px}
+.qz-res-rank{font-size:40px; font-weight:800; color:var(--qz-gold); opacity:0}
+.qz-res-msg{margin:8px 0 0; max-width:1180px; text-align:center;
+  font-size:30px; line-height:1.5; color:rgba(255,248,238,.88); opacity:0}
+.qz-res-btns{display:flex; gap:20px; margin-top:26px; opacity:0}
+.qz-res-btn{
+  padding:17px 44px; border-radius:100px; cursor:pointer; border:1px solid rgba(255,255,255,.3);
+  background:rgba(255,255,255,.12); color:#fff;
+  font-family:var(--font-body); font-size:26px; font-weight:700;
+  transition:transform .22s ease, background .22s ease;
+}
+.qz-res-btn:hover{transform:scale(1.05); background:rgba(255,255,255,.22)}
+.qz-res-btn.gold{background:var(--qz-gold); color:#3A2400; border-color:transparent;
+  box-shadow:0 14px 38px rgba(255,201,60,.32)}
+.qz-res .qz-mascot{position:relative; right:auto; bottom:auto; width:130px; height:130px; margin:0 0 2px}
+.qz-res.active .qz-res-kicker{animation:qvfade .5s ease .15s both}
+.qz-res.active .qz-res-title {animation:qvrise .6s cubic-bezier(.22,.8,.3,1) .25s both}
+.qz-res.active .qz-ring     {animation:qvpop  .6s cubic-bezier(.22,.9,.3,1) .45s both}
+.qz-res.active .qz-res-rank {animation:qvrise .5s cubic-bezier(.22,.8,.3,1) 1.6s both}
+.qz-res.active .qz-res-msg  {animation:qvfade .5s ease 1.8s both}
+.qz-res.active .qz-res-btns {animation:qvrise .5s cubic-bezier(.22,.8,.3,1) 2s both}
+
+@media (prefers-reduced-motion:reduce){
+  .qz-res.active .qz-res-kicker,.qz-res.active .qz-res-title,.qz-res.active .qz-ring,
+  .qz-res.active .qz-res-rank,.qz-res.active .qz-res-msg,.qz-res.active .qz-res-btns{
+    animation:none !important; opacity:1 !important; transform:none !important}
+  .qz-ring .qz-ring-fg{transition:none}
+}
+
+@media (prefers-reduced-motion:reduce){
   .qz-slide.active .qz-blob,
   .qz-slide.active .qz-ic,
   .qz-slide.active .qz-mascot,
@@ -2402,7 +2642,7 @@ aside.notes-src{display:none}
       <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1994</div><div class="tl-txt">HNTW 7 khóa VII<br>nêu khái niệm CNH – HĐH</div></div>
       <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1995</div><div class="tl-txt">Bình thường hóa với Hoa Kỳ<br>gia nhập ASEAN</div></div>
       <div class="tl-item big"><div class="tl-dot"></div><div class="tl-year">1996</div><div class="tl-txt"><b class="hl">Đại hội VIII</b><br>đẩy mạnh CNH – HĐH</div></div>
-      <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">2020</div><div class="tl-txt">Mục tiêu: cơ bản trở thành<br>nước công nghiệp</div></div>
+      <div class="tl-item goal"><div class="tl-dot"></div><div class="tl-year">2020</div><div class="tl-txt">Mục tiêu: cơ bản trở thành<br>nước công nghiệp</div></div>
     </div>
     <div class="grid2">
       <div class="panel reveal">
@@ -2443,12 +2683,12 @@ aside.notes-src{display:none}
   <h2 class="s-title reveal">Sáu quan điểm chỉ đạo công nghiệp hóa, hiện đại hóa</h2>
   <div class="s-body">
     <div class="cards6">
-      <div class="qcard reveal"><div class="qhead"><div class="qnum">1</div><h4>Độc lập tự chủ đi đôi với mở rộng hợp tác quốc tế</h4></div><p>Đa phương hóa, đa dạng hóa; xây dựng nền kinh tế mở, hướng mạnh về xuất khẩu.</p></div>
-      <div class="qcard reveal"><div class="qhead"><div class="qnum">2</div><h4>Sự nghiệp của toàn dân, mọi thành phần kinh tế</h4></div><p>Kinh tế nhà nước giữ vai trò chủ đạo.</p></div>
-      <div class="qcard reveal"><div class="qhead"><div class="qnum">3</div><h4>Phát huy nguồn lực con người</h4></div><p>Yếu tố cơ bản cho sự phát triển nhanh và bền vững.</p></div>
-      <div class="qcard reveal"><div class="qhead"><div class="qnum">4</div><h4>Khoa học và công nghệ là động lực</h4></div><p>Kết hợp công nghệ truyền thống với công nghệ hiện đại.</p></div>
-      <div class="qcard reveal"><div class="qhead"><div class="qnum">5</div><h4>Lấy hiệu quả kinh tế làm chuẩn cơ bản</h4></div><p>Đầu tư chiều sâu; ưu tiên ngành hiệu quả, tạo nhiều việc làm.</p></div>
-      <div class="qcard reveal"><div class="qhead"><div class="qnum">6</div><h4>Kết hợp kinh tế với quốc phòng – an ninh</h4></div><p>Phát triển kinh tế gắn với bảo vệ Tổ quốc.</p></div>
+      <button type="button" class="qcard reveal" data-qd="0" aria-label="Xem quan điểm 1"><div class="qhead"><div class="qnum">1</div><h4>Độc lập tự chủ đi đôi với mở rộng hợp tác quốc tế</h4></div><p>Đa phương hóa, đa dạng hóa; xây dựng nền kinh tế mở, hướng mạnh về xuất khẩu.</p><span class="qcard-seen" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg></span></button>
+      <button type="button" class="qcard reveal" data-qd="1" aria-label="Xem quan điểm 2"><div class="qhead"><div class="qnum">2</div><h4>Sự nghiệp của toàn dân, mọi thành phần kinh tế</h4></div><p>Kinh tế nhà nước giữ vai trò chủ đạo.</p><span class="qcard-seen" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg></span></button>
+      <button type="button" class="qcard reveal" data-qd="2" aria-label="Xem quan điểm 3"><div class="qhead"><div class="qnum">3</div><h4>Phát huy nguồn lực con người</h4></div><p>Yếu tố cơ bản cho sự phát triển nhanh và bền vững.</p><span class="qcard-seen" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg></span></button>
+      <button type="button" class="qcard reveal" data-qd="3" aria-label="Xem quan điểm 4"><div class="qhead"><div class="qnum">4</div><h4>Khoa học và công nghệ là động lực</h4></div><p>Kết hợp công nghệ truyền thống với công nghệ hiện đại.</p><span class="qcard-seen" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg></span></button>
+      <button type="button" class="qcard reveal" data-qd="4" aria-label="Xem quan điểm 5"><div class="qhead"><div class="qnum">5</div><h4>Lấy hiệu quả kinh tế làm chuẩn cơ bản</h4></div><p>Đầu tư chiều sâu; ưu tiên ngành hiệu quả, tạo nhiều việc làm.</p><span class="qcard-seen" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg></span></button>
+      <button type="button" class="qcard reveal" data-qd="5" aria-label="Xem quan điểm 6"><div class="qhead"><div class="qnum">6</div><h4>Kết hợp kinh tế với quốc phòng – an ninh</h4></div><p>Phát triển kinh tế gắn với bảo vệ Tổ quốc.</p><span class="qcard-seen" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg></span></button>
     </div>
   </div>
   <aside class="notes-src">Đại hội VIII xác định sáu quan điểm chỉ đạo quá trình công nghiệp hóa, hiện đại hóa. Có thể hình dung sáu quan điểm này theo ba nhóm. Nhóm thứ nhất trả lời câu hỏi làm với ai và bằng nguồn lực nào: quan điểm 1 về độc lập tự chủ gắn với hội nhập, quan điểm 2 về huy động mọi thành phần kinh tế. Nhóm thứ hai trả lời câu hỏi làm bằng động lực gì: quan điểm 3 về con người và quan điểm 4 về khoa học – công nghệ. Nhóm thứ ba trả lời câu hỏi làm như thế nào cho đúng: quan điểm 5 lấy hiệu quả kinh tế làm chuẩn, quan điểm 6 gắn kinh tế với quốc phòng – an ninh. Sau đây nhóm xin đi vào từng quan điểm cụ thể.</aside>
@@ -2502,13 +2742,43 @@ aside.notes-src{display:none}
   <h2 class="s-title reveal">Một số hạn chế trong quá trình thực hiện</h2>
   <p class="s-sub reveal">Nhìn nhận khách quan để rút ra bài học cho giai đoạn tiếp theo</p>
   <div class="s-body">
-    <ul class="bul">
-      <li class="reveal">Mục tiêu <b>cơ bản trở thành nước công nghiệp vào năm 2020 chưa đạt được</b> như dự kiến.</li>
-      <li class="reveal"><b>Năng suất lao động</b> và <b>chất lượng tăng trưởng</b> còn thấp; tăng trưởng vẫn dựa nhiều vào vốn và lao động giá rẻ.</li>
-      <li class="reveal"><b>Trình độ công nghệ</b> của nhiều ngành còn lạc hậu; công nghiệp hỗ trợ phát triển chậm.</li>
-      <li class="reveal">Chất lượng <b>nguồn nhân lực</b> chưa đáp ứng yêu cầu của nền sản xuất hiện đại.</li>
-      <li class="reveal">Một số nơi phát triển kinh tế chưa gắn tốt với <b>bảo vệ môi trường</b>.</li>
-    </ul>
+    <!-- hạn chế 1: minh họa bằng chặng đường tới mốc 2020 -->
+    <div class="lim-road reveal">
+      <svg class="lim-svg" viewBox="0 0 1600 130" role="img" aria-label="Chặng đường từ Đại hội VIII 1996 tới mục tiêu nước công nghiệp năm 2020, dừng lại trước đích">
+        <line class="lim-base" x1="60" y1="74" x2="1540" y2="74"/>
+        <line class="lim-done" x1="60" y1="74" x2="1105" y2="74"/>
+        <line class="lim-gap"  x1="1105" y1="74" x2="1500" y2="74"/>
+        <g class="lim-start"><circle cx="60" cy="74" r="13"/><text x="60" y="38">1996</text><text class="lim-cap" x="60" y="112">Đại hội VIII</text></g>
+        <g class="lim-now"><circle cx="1105" cy="74" r="17"/><text x="1105" y="34">thực tế đạt được</text></g>
+        <g class="lim-goal">
+          <path class="lim-flag" d="M1500 74V22h64l-16 16 16 16h-64"/>
+          <circle cx="1500" cy="74" r="13"/>
+          <text x="1500" y="112">2020</text>
+        </g>
+        <text class="lim-gaplbl" x="1302" y="60">khoảng cách còn lại</text>
+      </svg>
+      <p class="lim-lead">Mục tiêu <b>cơ bản trở thành nước công nghiệp vào năm 2020 chưa đạt được</b> như dự kiến.</p>
+    </div>
+
+    <!-- bốn hạn chế còn lại -->
+    <div class="lim-grid">
+      <div class="lim-card reveal">
+        <div class="lim-ico"><svg viewBox="0 0 24 24"><path d="M3 20h18M6 20v-6M11 20V9M16 20v-3M21 20V5"/></svg></div>
+        <div class="lim-txt"><b>Năng suất lao động</b> và <b>chất lượng tăng trưởng</b> còn thấp; tăng trưởng vẫn dựa nhiều vào vốn và lao động giá rẻ.</div>
+      </div>
+      <div class="lim-card reveal">
+        <div class="lim-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.6v3M12 18.4v3M2.6 12h3M18.4 12h3M5.4 5.4l2.1 2.1M16.5 16.5l2.1 2.1M18.6 5.4l-2.1 2.1M7.5 16.5l-2.1 2.1"/></svg></div>
+        <div class="lim-txt"><b>Trình độ công nghệ</b> của nhiều ngành còn lạc hậu; công nghiệp hỗ trợ phát triển chậm.</div>
+      </div>
+      <div class="lim-card reveal">
+        <div class="lim-ico"><svg viewBox="0 0 24 24"><path d="M12 3l9 4.6-9 4.6-9-4.6z"/><path d="M6.5 10.2V15c0 1.6 2.5 3 5.5 3s5.5-1.4 5.5-3v-4.8"/></svg></div>
+        <div class="lim-txt">Chất lượng <b>nguồn nhân lực</b> chưa đáp ứng yêu cầu của nền sản xuất hiện đại.</div>
+      </div>
+      <div class="lim-card reveal">
+        <div class="lim-ico"><svg viewBox="0 0 24 24"><path d="M12 21c4.5-3 7-6.4 7-10a7 7 0 10-14 0c0 3.6 2.5 7 7 10z"/><path d="M12 14V8M9.4 10.2C10.4 9 12 9 12 9s1.6 0 2.6 1.2"/></svg></div>
+        <div class="lim-txt">Một số nơi phát triển kinh tế chưa gắn tốt với <b>bảo vệ môi trường</b>.</div>
+      </div>
+    </div>
     <div class="strip reveal"><span class="lbl">Bài học:</span><span>Những hạn chế trên đặt ra yêu cầu tiếp tục đẩy mạnh CNH – HĐH theo hướng nâng cao chất lượng, dựa trên khoa học – công nghệ, đổi mới sáng tạo và nguồn nhân lực chất lượng cao.</span></div>
   </div>
   <aside class="notes-src">Nhóm xin trình bày phần hạn chế một cách khách quan. Mục tiêu đến năm 2020 cơ bản trở thành nước công nghiệp đã không đạt được như dự kiến; điều này được chính các văn kiện của Đảng thừa nhận và điều chỉnh qua các kỳ đại hội sau. Nguyên nhân chủ yếu là mô hình tăng trưởng còn dựa nhiều vào vốn và lao động giá rẻ nên năng suất lao động và chất lượng tăng trưởng chưa cao; trình độ công nghệ của nhiều ngành còn lạc hậu, công nghiệp hỗ trợ phát triển chậm; chất lượng nguồn nhân lực chưa theo kịp yêu cầu. Nhóm xin lưu ý rằng các con số định lượng cụ thể cần được kiểm tra theo văn kiện và số liệu thống kê chính thức, nên ở đây nhóm chỉ nêu xu hướng chứ không đưa số liệu chưa kiểm chứng.</aside>
@@ -2607,7 +2877,14 @@ aside.notes-src{display:none}
 </div><!-- /viewport -->
 
 <div id="counter">1 / 22</div>
-<div id="hint"><kbd>←</kbd> <kbd>→</kbd> hoặc cuộn chuột · <kbd>N</kbd> ghi chú · <kbd>F</kbd> toàn màn hình</div>
+<div id="hint"><kbd>←</kbd> <kbd>→</kbd> hoặc cuộn chuột · <kbd>N</kbd> ghi chú · <kbd>T</kbd> nhảy slide · <kbd>F</kbd> toàn màn hình</div>
+
+<div id="jump" aria-hidden="true">
+  <input id="jump-range" type="range" min="1" value="1" step="1" aria-label="Kéo để chọn slide">
+  <input id="jump-num" type="text" inputmode="numeric" aria-label="Nhập số slide">
+  <span id="jump-tot"></span>
+  <span id="jump-name"></span>
+</div>
 
 <div id="notes"><div id="notes-inner">
   <h5 id="notes-head">Ghi chú người thuyết trình</h5>
@@ -2903,6 +3180,10 @@ aside.notes-src{display:none}
       +     '</div>'
       +   '</div>'
       + '</div>'
+      + '<button type="button" class="qd-back" data-back="1" aria-label="Quay lại sáu quan điểm" title="Quay lại sáu quan điểm">'
+      +   '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>'
+      +   '<span>Sáu quan điểm</span>'
+      + '</button>'
       + '<div class="qd-steps">' + steps + '</div>'
       + '<aside class="notes-src">' + d.notes + '</aside>';
 
@@ -3148,6 +3429,16 @@ aside.notes-src{display:none}
 
   var QZ_LETTER = ['A', 'B', 'C', 'D'];
 
+  /* nút tắt tiếng — chỉ xuất hiện trong phần quiz */
+  function qzMuteBtn(){
+    return '<button type="button" class="qz-mute" aria-label="Bật/tắt âm thanh" title="Bật/tắt âm thanh (M)">'
+      + '<svg viewBox="0 0 24 24">'
+      +   '<path d="M4 9v6h4l5 4V5L8 9z"/>'
+      +   '<g class="qz-mute-w"><path d="M16.5 8.8a4.5 4.5 0 010 6.4"/><path d="M19.2 6.1a8.3 8.3 0 010 11.8"/></g>'
+      +   '<g class="qz-mute-x"><path d="M17 9.5l5 5M22 9.5l-5 5"/></g>'
+      + '</svg></button>';
+  }
+
   /* linh vật ngôi sao */
   function qzMascot(){
     return '<div class="qz-mascot" data-state="idle">'
@@ -3227,7 +3518,10 @@ aside.notes-src{display:none}
       s.innerHTML = qzBackdrop()
         + '<div class="qz-top">'
         +   '<div class="qz-dots">' + dots + '</div>'
-        +   '<div class="qz-score"><span class="qz-score-n">0</span> / ' + QUIZ.length + '</div>'
+        +   '<div class="qz-top-r">'
+        +     '<div class="qz-score"><span class="qz-score-n">0</span> / ' + QUIZ.length + '</div>'
+        +     qzMuteBtn()
+        +   '</div>'
         + '</div>'
         + '<span class="qz-ghost">' + (i + 1 < 10 ? '0' + (i + 1) : (i + 1)) + '</span>'
         + '<div class="qz-body">'
@@ -3245,6 +3539,33 @@ aside.notes-src{display:none}
         +   q.explanation + '</aside>';
       frag.push(s);
     });
+
+    /* ---------- slide kết quả ---------- */
+    var res = document.createElement('section');
+    res.className = 'slide qz-slide qz-res';
+    res.setAttribute('data-quiz', 'result');
+    res.innerHTML = qzBackdrop()
+      + '<div class="qz-top"><span></span><div class="qz-top-r">' + qzMuteBtn() + '</div></div>'
+      + '<div class="qz-res-in">'
+      +   '<div class="qz-res-kicker">Hoàn thành phần ôn tập</div>'
+      +   '<h1 class="qz-res-title">Chúc mừng!</h1>'
+      +   '<div class="qz-ring">'
+      +     '<svg viewBox="0 0 280 280">'
+      +       '<circle class="qz-ring-bg" cx="140" cy="140" r="122"/>'
+      +       '<circle class="qz-ring-fg" cx="140" cy="140" r="122"/>'
+      +     '</svg>'
+      +     '<div class="qz-ring-num"><b class="qz-res-n">0</b><i>/ ' + QUIZ.length + '</i></div>'
+      +   '</div>'
+      +   qzMascot()
+      +   '<div class="qz-res-rank">—</div>'
+      +   '<p class="qz-res-msg"></p>'
+      +   '<div class="qz-res-btns">'
+      +     '<button type="button" class="qz-res-btn qz-res-again">Làm lại <span>↺</span></button>'
+      +     '<button type="button" class="qz-res-btn gold qz-res-next">Tiếp tục <span>→</span></button>'
+      +   '</div>'
+      + '</div>'
+      + '<aside class="notes-src">Đây là slide tổng kết phần ôn tập. Số điểm hiển thị là số câu trả lời đúng ngay lần đầu. Có thể bấm Làm lại, hoặc phím R, để cả lớp thử lại; bấm Tiếp tục để sang phần cảm ơn. Phím M bật/tắt âm thanh.</aside>';
+    frag.push(res);
 
     frag.forEach(function(el){ anchor.parentNode.insertBefore(el, anchor); });
     anchor.parentNode.removeChild(anchor);
@@ -3668,14 +3989,51 @@ aside.notes-src{display:none}
   /* ============================================================
      SFX — tiếng đúng/sai sinh bằng WebAudio, không cần file ngoài
      ============================================================ */
-  var actx = null;
-  function sfx(kind){
-    if(reduceMQ.matches) return;
+  var actx = null, sfxMuted = false;
+  function sfxCtx(){
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    if(!actx) actx = new AC();
+    if(actx.state === 'suspended') actx.resume();
+    return actx;
+  }
+  /* tiếng vỗ tay: từng tiếng nổ nhiễu ngắn, lọc băng tần, rải ngẫu nhiên — giữ nhỏ, không chói */
+  function applause(){
+    if(sfxMuted || reduceMQ.matches) return;
     try{
-      var AC = window.AudioContext || window.webkitAudioContext;
-      if(!AC) return;
-      if(!actx) actx = new AC();
-      if(actx.state === 'suspended') actx.resume();
+      var ac = sfxCtx(); if(!ac) return;
+      var dur = 2.2, sr = ac.sampleRate;
+      var buf = ac.createBuffer(1, Math.ceil(sr*dur), sr);
+      var d = buf.getChannelData(0), i, k, at, pos, len, amp, env;
+      /* ~90 tiếng vỗ rời, dày lên ở đầu rồi thưa dần */
+      for(k = 0; k < 90; k++){
+        at  = Math.pow(Math.random(), 0.7) * (dur - 0.25);
+        pos = Math.floor(at * sr);
+        len = Math.floor((0.012 + Math.random()*0.022) * sr);
+        amp = 0.22 + Math.random()*0.5;
+        for(i = 0; i < len && pos + i < d.length; i++){
+          env = Math.pow(1 - i/len, 2.6);
+          d[pos + i] += (Math.random()*2 - 1) * env * amp;
+        }
+      }
+      var src = ac.createBufferSource(); src.buffer = buf;
+      var bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1500; bp.Q.value = 0.7;
+      var hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 700;
+      var g  = ac.createGain();
+      var t0 = ac.currentTime;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.10, t0 + 0.12);   /* nhỏ vừa phải */
+      g.gain.setValueAtTime(0.10, t0 + dur - 0.9);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      src.connect(bp); bp.connect(hp); hp.connect(g); g.connect(ac.destination);
+      src.start(t0); src.stop(t0 + dur);
+    }catch(e){}
+  }
+  function sfx(kind){
+    if(sfxMuted || reduceMQ.matches) return;
+    try{
+      var actx = sfxCtx();
+      if(!actx) return;
       /* đúng: hai nốt đi lên; sai: một nốt trầm trượt xuống */
       var notes = kind === 'good' ? [[880,0,.13],[1318.5,.11,.26]] : [[220,0,.34]];
       notes.forEach(function(nt){
@@ -3855,6 +4213,53 @@ aside.notes-src{display:none}
       }
     }
 
+    /* ---------- slide kết quả: đếm điểm, vòng tròn, xếp loại ---------- */
+    var resEl = slides[qSlides['result']];
+    var resTimer = 0;
+
+    function rank(score){
+      var n = QUIZ.length, r = score / n;
+      if(r >= 0.9) return ['Xuất sắc', 'Cả lớp nắm rất chắc nội dung Đại hội VIII. Nhóm xin cảm ơn sự theo dõi của cô/thầy và các bạn.'];
+      if(r >= 0.7) return ['Tốt', 'Những ý chính của sáu quan điểm đã được ghi nhớ tốt. Phần giải thích sau mỗi câu sẽ giúp củng cố thêm.'];
+      if(r >= 0.5) return ['Khá', 'Đã nắm được phần lớn nội dung. Có thể xem lại phần sáu quan điểm chỉ đạo để nhớ kỹ hơn.'];
+      return ['Cùng ôn lại nhé', 'Không sao cả — nội dung khá nhiều mốc và khái niệm. Nhóm mời cả lớp cùng xem lại phần hai của bài trình bày.'];
+    }
+
+    function showResult(){
+      if(!resEl) return;
+      clearTimeout(resTimer);
+      var n   = QUIZ.length;
+      var num = resEl.querySelector('.qz-res-n');
+      var fg  = resEl.querySelector('.qz-ring-fg');
+      var rk  = resEl.querySelector('.qz-res-rank');
+      var msg = resEl.querySelector('.qz-res-msg');
+      var inf = rank(qzScore);
+      if(rk)  rk.textContent  = inf[0];
+      if(msg) msg.textContent = inf[1];
+      mascot(resEl, qzScore >= n*0.5 ? 'happy' : 'idle');
+      if(num) num.textContent = '0';
+      if(fg)  fg.style.strokeDashoffset = '766';
+
+      if(reduceMQ.matches){
+        if(num) num.textContent = String(qzScore);
+        if(fg)  fg.style.strokeDashoffset = String(766 * (1 - qzScore/n));
+        return;
+      }
+      /* vòng tròn chạy + số đếm tăng dần, khớp nhịp với animation xuất hiện */
+      resTimer = setTimeout(function(){
+        if(fg) fg.style.strokeDashoffset = String(766 * (1 - qzScore/n));
+        var t0 = now(), DUR = 1300;
+        (function tick(){
+          if(slides[cur] !== resEl) return;
+          var u = clamp((now() - t0)/DUR, 0, 1);
+          if(num) num.textContent = String(Math.round(easeInOutCubic(u) * qzScore));
+          if(u < 1) requestAnimationFrame(tick);
+        })();
+        applause();
+        confetti(qzScore >= n*0.7 ? 90 : 46, true);
+      }, 600);
+    }
+
     /* ---------- làm lại ---------- */
     function reset(){
       qzScore = 0;
@@ -3874,15 +4279,37 @@ aside.notes-src{display:none}
       var nx = el.querySelector('.qz-next');
       if(nx) nx.addEventListener('click', function(ev){ ev.stopPropagation(); gotoSlide(1); });
     });
+    if(resEl){
+      var again = resEl.querySelector('.qz-res-again');
+      if(again) again.addEventListener('click', function(ev){ ev.stopPropagation(); reset(); });
+      var nxt = resEl.querySelector('.qz-res-next');
+      if(nxt) nxt.addEventListener('click', function(ev){ ev.stopPropagation(); gotoSlide(1); });
+    }
+
+    /* nút tắt tiếng có mặt trên mọi slide quiz; bấm cái nào cũng đổi trạng thái tất cả */
+    function syncMute(){
+      Array.prototype.forEach.call(document.querySelectorAll('.qz-mute'), function(b){
+        b.classList.toggle('off', sfxMuted);
+        b.setAttribute('aria-pressed', sfxMuted ? 'true' : 'false');
+      });
+    }
+    function toggleMute(){ sfxMuted = !sfxMuted; syncMute(); }
+    Array.prototype.forEach.call(document.querySelectorAll('.qz-mute'), function(b){
+      b.addEventListener('click', function(ev){ ev.stopPropagation(); toggleMute(); });
+    });
+    syncMute();
+
     var startBtn = slides[qSlides.intro].querySelector('.qz-start');
     if(startBtn) startBtn.addEventListener('click', function(ev){ ev.stopPropagation(); gotoSlide(1); });
 
     /* phím A B C D hoặc 1 2 3 4 */
     document.addEventListener('keydown', function(e){
       if(e.ctrlKey || e.metaKey || e.altKey) return;
+      if(e.target && (e.target.id === 'jump-num' || e.target.id === 'jump-range')) return;
       var key = slides[cur] && slides[cur].getAttribute('data-quiz');
       if(key === null || key === undefined) return;
       if(e.key.toLowerCase() === 'r'){ e.preventDefault(); reset(); return; }   /* R = làm lại quiz */
+      if(e.key.toLowerCase() === 'm'){ e.preventDefault(); toggleMute(); return; }  /* M = tắt/bật tiếng */
       var i = parseInt(key, 10);
       if(isNaN(i)) return;
       var map = { a:0, b:1, c:2, d:3, '1':0, '2':1, '3':2, '4':3 };
@@ -3917,6 +4344,7 @@ aside.notes-src{display:none}
       enter: function(deckIdx){
         var key = slides[deckIdx] && slides[deckIdx].getAttribute('data-quiz');
         if(key === null || key === undefined) return;
+        if(key === 'result'){ showResult(); return; }
         var i = parseInt(key, 10);
         if(!isNaN(i)) resetQ(i);   /* không lưu đáp án: quay lại là chọn lại từ đầu */
       }
@@ -3960,6 +4388,35 @@ aside.notes-src{display:none}
       ev.stopPropagation();
       if(locked() || !qdGroup) return;
       show(qdGroup.deckIndex(+b.getAttribute('data-go')));
+    });
+  });
+
+  /* --- slide tổng quan: bấm thẻ để tới thẳng quan điểm đó; thẻ đã xem được đánh dấu --- */
+  var qcards = Array.prototype.slice.call(document.querySelectorAll('.qcard[data-qd]'));
+  qcards.forEach(function(c){
+    c.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      if(locked() || !qdGroup) return;
+      show(qdGroup.deckIndex(+c.getAttribute('data-qd')));
+    });
+  });
+  function qdMarkSeen(m){
+    if(m < 0 || m >= qcards.length) return;
+    qcards[m].classList.add('seen');
+  }
+
+  /* --- nút quay lại slide tổng quan sáu quan điểm --- */
+  var qdOverviewIdx = -1;
+  (function(){
+    var c = document.querySelector('.qcard[data-qd]');
+    var sec = c && c.closest ? c.closest('.slide') : null;
+    qdOverviewIdx = sec ? slides.indexOf(sec) : -1;
+  })();
+  Array.prototype.forEach.call(document.querySelectorAll('.qd-back'), function(b){
+    b.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      if(locked() || qdOverviewIdx < 0) return;
+      show(qdOverviewIdx);
     });
   });
 
@@ -4027,12 +4484,16 @@ aside.notes-src{display:none}
       s.classList.toggle('prev',   k <  n);
     });
     cur = n;
+    if(slides[n].hasAttribute('data-qd') && !slides[n].classList.contains('qz-slide')){
+      qdMarkSeen(parseInt(slides[n].getAttribute('data-qd'), 10));   /* đánh dấu quan điểm đã trình bày */
+    }
     counter.textContent = (n+1) + ' / ' + slides.length;
     bar.style.width = ((n+1)/slides.length*100) + '%';
     updateNotes();
     if(flies[n]) flies[n].enter(dir);
     groups.forEach(function(g){ g.enter(n, slid, dir); });
     gmapUpdate();
+    if(jumpOn) jumpSync();
     navLock = now() + (slid ? slidDur + 140 : 220);   /* chặn dồn lệnh khi giữ phím */
     if(history.replaceState) history.replaceState(null, '', '#' + (n+1));
   }
@@ -4077,8 +4538,99 @@ aside.notes-src{display:none}
   }
 
   /* --- bàn phím --- */
+  /* ============================================================
+     THANH NHẢY SLIDE — phím T: kéo thanh hoặc gõ số rồi Enter
+     ============================================================ */
+  var jumpBox   = document.getElementById('jump');
+  var jumpRange = document.getElementById('jump-range');
+  var jumpNum   = document.getElementById('jump-num');
+  var jumpTot   = document.getElementById('jump-tot');
+  var jumpName  = document.getElementById('jump-name');
+  var jumpOn    = false;
+  var jumpTimer = 0, jumpHover = false;
+  var JUMP_IDLE = 3000;   /* không đụng tới trong 3 giây thì tự ẩn */
+
+  /* tên slide để xem trước khi kéo */
+  var slideNames = slides.map(function(s, i){
+    var t = s.querySelector('.s-title, .dv-title, .qd-title, .vt-title, .qz-question, .qz-bigtitle, .qz-res-title, h1');
+    var name = t ? t.textContent.replace(/\s+/g, ' ').trim() : '';
+    if(!name && s.classList.contains('qz-res')) name = 'Kết quả ôn tập';
+    return name || ('Slide ' + (i + 1));
+  });
+
+  function jumpPreview(n){
+    n = clamp(n, 1, slides.length);
+    if(jumpRange) jumpRange.value = String(n);
+    if(jumpNum && document.activeElement !== jumpNum) jumpNum.value = String(n);
+    if(jumpName) jumpName.textContent = slideNames[n-1];
+  }
+  function jumpSync(){ jumpPreview(cur + 1); }
+
+  /* hẹn giờ tự ẩn; mọi thao tác đều đặt lại đồng hồ, và không ẩn khi chuột còn đặt trên thanh */
+  function jumpTouch(){
+    clearTimeout(jumpTimer);
+    if(!jumpOn) return;
+    jumpTimer = setTimeout(function(){
+      if(jumpHover) jumpTouch();
+      else jumpToggle(false);
+    }, JUMP_IDLE);
+  }
+  function jumpToggle(on){
+    jumpOn = (on === undefined) ? !jumpOn : !!on;
+    if(!jumpBox) return;
+    jumpBox.classList.toggle('on', jumpOn);
+    document.body.classList.toggle('jump-on', jumpOn);
+    jumpBox.setAttribute('aria-hidden', jumpOn ? 'false' : 'true');
+    if(jumpOn){
+      jumpSync();
+      if(jumpNum) jumpNum.select ? (jumpNum.focus(), jumpNum.select()) : jumpNum.focus();
+      jumpTouch();
+    }else{
+      clearTimeout(jumpTimer);
+      jumpHover = false;
+      if(jumpNum) jumpNum.blur();
+    }
+  }
+  if(jumpRange){
+    jumpRange.max = String(slides.length);
+    if(jumpTot) jumpTot.textContent = '/ ' + slides.length;
+    /* kéo: chỉ xem trước tên slide; thả tay mới chuyển, tránh giật khi lướt qua slide nặng */
+    jumpRange.addEventListener('input', function(){
+      jumpPreview(parseInt(jumpRange.value, 10));
+      jumpTouch();
+    });
+    jumpRange.addEventListener('change', function(){
+      var n = parseInt(jumpRange.value, 10);
+      if(!isNaN(n) && n - 1 !== cur){ navLock = 0; show(n - 1); }
+      jumpTouch();
+    });
+    jumpRange.addEventListener('keydown', function(e){ e.stopPropagation(); });
+  }
+  if(jumpNum){
+    jumpNum.addEventListener('keydown', function(e){
+      e.stopPropagation();
+      jumpTouch();
+      if(e.key === 'Enter'){
+        var n = parseInt(jumpNum.value, 10);
+        if(!isNaN(n)){ navLock = 0; show(clamp(n, 1, slides.length) - 1); }
+        jumpToggle(false);
+      }else if(e.key === 'Escape'){
+        jumpToggle(false);
+      }
+    });
+  }
+  if(jumpBox){
+    jumpBox.addEventListener('click', function(ev){ ev.stopPropagation(); jumpTouch(); });
+    jumpBox.addEventListener('mouseenter', function(){ jumpHover = true; clearTimeout(jumpTimer); });
+    jumpBox.addEventListener('mouseleave', function(){ jumpHover = false; jumpTouch(); });
+    jumpBox.addEventListener('mousemove', jumpTouch);
+  }
+
   document.addEventListener('keydown', function(e){
     if(e.ctrlKey || e.metaKey || e.altKey) return;
+    if(e.key === 'Escape' && jumpOn){ e.preventDefault(); jumpToggle(false); return; }
+    if(e.target && (e.target.id === 'jump-num' || e.target.id === 'jump-range')) return;
+    if(e.key.toLowerCase() === 't'){ e.preventDefault(); jumpToggle(); return; }
     switch(e.key){
       case 'ArrowRight': case 'ArrowDown': case 'PageDown': case ' ': case 'Enter':
         e.preventDefault(); next(); break;
